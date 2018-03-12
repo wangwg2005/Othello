@@ -47,36 +47,35 @@ public class Board {
 		if (POS[row][col] != EMPTY)
 			return false;
 
-		if( rule.valid(player, col, row)) {
+		if( rule.valid(player, col, row,true)) {
 //			POS[row][col]=player;
 			return true;
 		}
 		return false;
 	}
 	
-	private void transferV(int col, int startR, int endR, char player) {
-		for(int i=startR;i<endR;i++) {
-			POS[i][col]=player;
+	private void drawLine(char player, int col, int row, int colInc, int rowInc) {
+		char endPoint=POS[row][col]==player?EMPTY:player;
+		int r=row, c = col;
+		while(POS[r][c]!=endPoint) {
+			POS[r][c]=player;
+			r+=rowInc;
+			c+=colInc;
 		}
 	}
-	
-	private void transferH(int row, int startC, int endC, char player) {
-		for(int i=startC;i<endC;i++) {
-			POS[row][i]=player;
-		}
-	}
-	
+
 
 	public class Rule {
-
-		public boolean valid(char player, int col, int row) {
-			int r=row;
+		
+		
+		private boolean test(char player, int col, int row, int colInc, int rowInc) {
 			int c=col;
-			boolean test=false;
-			while (++c < 8) {
+			int r=row;
+			
+			boolean hasCounterParty=false;
+			while((c+=colInc)<SCALE && c>=0 &&(r+=rowInc)>=0&& r<SCALE) {
 				if(POS[r][c]==player) {
-					if(test) {
-						transferH(row,col,c,player);
+					if(hasCounterParty) {
 						 return true;
 					 }else {
 						 break;
@@ -84,74 +83,36 @@ public class Board {
 				}else if(POS[r][c]==EMPTY) {
 					 break;
 				}else {
-					test=true;
+					hasCounterParty=true;
 				}
 			}
-			if(c==8)
-				return false;
-			r=row;
-			c=col;
-			test=false;
-			while (--c >=0) {
-				if(POS[r][c]==player) {
-					if(test) {
-						transferH(row,c+1,col+1,player);
-						 return true;
-					 }else {
-						 break;
-					 }
-				}else if(POS[r][c]==EMPTY) {
-					 break;
-				}else {
-					test=true;
-				}
-			}
-			if(c<0)
-				return false;
-			r=row;
-			c=col;
-			test=false;
-			while (++r < 8) {
-				if(POS[r][c]==player) {
-					if(test) {
-						transferV(c,row,r,player);
-						 return true;
-					 }else {
-						 break;
-					 }
-				}else if(POS[r][c]==EMPTY) {
-					 break;
-				}else {
-					test=true;
-				}
+			return false;
+		}
 
-			}
-			if(r==8)
-				return false;
-			r=row;
-			c=col;
-			test=false;
-			while (--r >=0) {
-				if(POS[r][c]==player) {
-					if(test) {
-						transferV(c,r+1,row+1,player);
-						 return true;
-					 }else {
-						 break;
-					 }
-				}else if(POS[r][c]==EMPTY) {
-					 break;
-				}else {
-					test=true;
+		public boolean valid(char player, int col, int row,boolean draw) {
+			boolean result=false;
+			for(int i=-1;i<2;i++) {
+				for(int j=-1;j<2;j++) {
+					if(i==0 && j==0)
+						continue;
+					if(test(player,col,row,i,j)) {
+						result=true;
+						if(draw) {
+							drawLine(player,col,row,i,j);
+						}else {
+							break;
+						}
+					}
 				}
 			}
-			return r<0;
+			return result;
+
 		}
 
 		public boolean playable(char player) {
 			for(int i=0;i<SCALE;i++) {
 				for(int j=0;j<SCALE;j++) {
-					if(POS[i][j]==EMPTY&& valid(player,i,j)) {
+					if(POS[i][j]==EMPTY&& valid(player,i,j,false)) {
 						return true;
 					}
 				}
